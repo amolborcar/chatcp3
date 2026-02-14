@@ -5,10 +5,15 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from src.core.config import get_settings
 from src.db.base import Base
 from src.db import models  # noqa: F401  # Ensure models are imported for metadata discovery.
 
 config = context.config
+settings = get_settings()
+
+# Ensure Alembic uses the same DATABASE_URL as the application (.env aware).
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -40,4 +45,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-

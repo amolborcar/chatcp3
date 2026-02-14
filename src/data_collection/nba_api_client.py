@@ -11,15 +11,7 @@ Key features:
 - Structured output for database storage
 """
 
-from nba_api.stats.endpoints import (
-    leagueleaders, 
-    leaguedashteamstats, 
-    playercareerstats,
-    playerindex,
-    leaguestandings,
-    scoreboardv2,
-    playergamelog
-)
+import importlib
 from nba_api.stats.static import players, teams
 import pandas as pd
 import logging
@@ -35,6 +27,31 @@ from .response_validator import validate_nba_response, ValidationSeverity
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+class _EndpointProxy:
+    """Lazily imports a single nba_api endpoint module on first attribute access."""
+
+    def __init__(self, module_name: str):
+        self._module_name = module_name
+        self._module = None
+
+    def _load(self):
+        if self._module is None:
+            self._module = importlib.import_module(f"nba_api.stats.endpoints.{self._module_name}")
+        return self._module
+
+    def __getattr__(self, item):
+        return getattr(self._load(), item)
+
+
+# Lazy endpoint module proxies to avoid expensive eager imports at startup.
+leagueleaders = _EndpointProxy("leagueleaders")
+leaguedashteamstats = _EndpointProxy("leaguedashteamstats")
+playercareerstats = _EndpointProxy("playercareerstats")
+leaguestandings = _EndpointProxy("leaguestandings")
+scoreboardv2 = _EndpointProxy("scoreboardv2")
+playergamelog = _EndpointProxy("playergamelog")
 
 
 class NBAApiClient:
@@ -431,6 +448,49 @@ class NBAApiClient:
         except Exception as e:
             logger.error(f"Error fetching career stats for player {player_id}: {e}")
             return {}
+
+    def get_player_game_log(
+        self,
+        player_id: int | str,
+        season: str = "2024-25",
+        season_type: str = "Regular Season",
+    ) -> List[Dict]:
+        """
+        Get per-game logs for a specific player and season.
+
+        Args:
+            player_id: NBA player ID
+            season: Season in format "2024-25"
+            season_type: NBA API season type value
+
+        Returns:
+            List of game log records for the player.
+        """
+        logger.info(f"Fetching game logs for player {player_id} ({season}, {season_type})...")
+
+        game_log = self._safe_api_call(
+            playergamelog.PlayerGameLog,
+            player_id=player_id,
+            season=season,
+            season_type_all_star=season_type,
+        )
+
+        if game_log is None:
+            logger.error(f"Failed to fetch game logs for player {player_id}")
+            return []
+
+        try:
+            df = game_log.get_data_frames()[0]
+            records = df.to_dict("records")
+            for record in records:
+                record["player_id"] = int(player_id)
+                record["season"] = season
+                record["retrieved_at"] = datetime.now()
+            logger.info(f"Retrieved {len(records)} game logs for player {player_id}")
+            return records
+        except Exception as e:
+            logger.error(f"Error processing game logs for player {player_id}: {e}")
+            return []
     
     def get_games_for_date(self, game_date: str = None) -> List[Dict]:
         """

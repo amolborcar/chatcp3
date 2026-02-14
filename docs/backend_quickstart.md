@@ -32,3 +32,8 @@ Update `DATABASE_URL` to your local Postgres connection.
 curl http://localhost:8000/v1/health
 ```
 
+## 6. Run initial ingestion pass
+
+```bash
+./venv/bin/python -m src.etl.jobs.daily_refresh --season 2024-25 --max-players 20
+```

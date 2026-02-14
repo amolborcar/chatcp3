@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     api_key_header: str = "X-API-Key"
     default_limit: int = 50
     max_limit: int = 200
+    ingest_default_season: str = "2024-25"
+    ingest_max_players: int = 30
+    ingest_active_only: bool = True
 
 
 @lru_cache(maxsize=1)
@@ -33,4 +36,3 @@ def get_settings() -> Settings:
     """Memoized settings getter."""
 
     return Settings()
-

@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     ingest_default_season: str = "2024-25"
     ingest_max_players: int = 30
     ingest_active_only: bool = True
+    ingest_api_delay_seconds: float = 0.5
+    ingest_api_timeout_seconds: float = 12.0
+    ingest_api_max_retries: int = 1
 
 
 @lru_cache(maxsize=1)

@@ -14,6 +14,11 @@ cp .env.example .env
 
 Update `DATABASE_URL` to your local Postgres connection.
 
+Optional budget-mode ETL tuning knobs (in `.env`):
+- `INGEST_API_DELAY_SECONDS` (default `0.5`)
+- `INGEST_API_TIMEOUT_SECONDS` (default `12.0`)
+- `INGEST_API_MAX_RETRIES` (default `1`)
+
 ## 3. Run migrations
 
 ```bash

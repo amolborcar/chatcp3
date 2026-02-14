@@ -22,7 +22,11 @@ def run(season: str | None = None, max_players: int | None = None) -> None:
     print(f"[{datetime.utcnow().isoformat()}] Loading NBA client...")
     from src.data_collection.nba_api_client import NBAApiClient
 
-    client = NBAApiClient(delay_seconds=0.7, timeout_seconds=20.0, max_retries=2)
+    client = NBAApiClient(
+        delay_seconds=settings.ingest_api_delay_seconds,
+        timeout_seconds=settings.ingest_api_timeout_seconds,
+        max_retries=settings.ingest_api_max_retries,
+    )
 
     print(f"[{datetime.utcnow().isoformat()}] Refresh started (season={season}, max_players={max_players})")
     print(f"[{datetime.utcnow().isoformat()}] Fetching teams...")

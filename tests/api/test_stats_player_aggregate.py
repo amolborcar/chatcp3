@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from fastapi.testclient import TestClient
@@ -10,6 +10,10 @@ from src.api.main import app
 from src.db.base import Base
 from src.db.models import Game, Player, PlayerGameStats, Team
 from src.db.session import get_db
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC)
 
 
 def _seed_stats_data(db: Session) -> None:
@@ -29,7 +33,7 @@ def _seed_stats_data(db: Session) -> None:
                 away_team_id=20,
                 game_status="final",
                 game_status_text="Final",
-                source_last_updated_at=datetime.utcnow(),
+                source_last_updated_at=_utc_now(),
             ),
             Game(
                 game_id=1002,
@@ -40,7 +44,7 @@ def _seed_stats_data(db: Session) -> None:
                 away_team_id=10,
                 game_status="final",
                 game_status_text="Final",
-                source_last_updated_at=datetime.utcnow(),
+                source_last_updated_at=_utc_now(),
             ),
             PlayerGameStats(
                 game_id=1001,
@@ -66,7 +70,7 @@ def _seed_stats_data(db: Session) -> None:
                 plus_minus=Decimal("8"),
                 source_endpoint="seed",
                 data_version="v1",
-                ingested_at=datetime.utcnow(),
+                ingested_at=_utc_now(),
             ),
             PlayerGameStats(
                 game_id=1002,
@@ -92,7 +96,7 @@ def _seed_stats_data(db: Session) -> None:
                 plus_minus=Decimal("-4"),
                 source_endpoint="seed",
                 data_version="v1",
-                ingested_at=datetime.utcnow(),
+                ingested_at=_utc_now(),
             ),
             PlayerGameStats(
                 game_id=1002,
@@ -118,7 +122,7 @@ def _seed_stats_data(db: Session) -> None:
                 plus_minus=Decimal("6"),
                 source_endpoint="seed",
                 data_version="v1",
-                ingested_at=datetime.utcnow(),
+                ingested_at=_utc_now(),
             ),
         ]
     )

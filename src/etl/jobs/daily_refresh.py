@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 
 from src.core.config import get_settings
 from src.db.models import DataQualityRun
 from src.db.session import SessionLocal
 from src.etl.loaders import upsert_player_game_logs, upsert_players, upsert_teams
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC)
 
 
 def run(season: str | None = None, max_players: int | None = None) -> None:
@@ -19,7 +23,7 @@ def run(season: str | None = None, max_players: int | None = None) -> None:
     max_players = max_players or settings.ingest_max_players
 
     # Lazy import to avoid expensive nba_api endpoint import cost during module import.
-    print(f"[{datetime.utcnow().isoformat()}] Loading NBA client...")
+    print(f"[{_utc_now().isoformat()}] Loading NBA client...")
     from src.data_collection.nba_api_client import NBAApiClient
 
     client = NBAApiClient(
@@ -28,10 +32,10 @@ def run(season: str | None = None, max_players: int | None = None) -> None:
         max_retries=settings.ingest_api_max_retries,
     )
 
-    print(f"[{datetime.utcnow().isoformat()}] Refresh started (season={season}, max_players={max_players})")
-    print(f"[{datetime.utcnow().isoformat()}] Fetching teams...")
+    print(f"[{_utc_now().isoformat()}] Refresh started (season={season}, max_players={max_players})")
+    print(f"[{_utc_now().isoformat()}] Fetching teams...")
     teams = client.get_all_teams()
-    print(f"[{datetime.utcnow().isoformat()}] Fetching players...")
+    print(f"[{_utc_now().isoformat()}] Fetching players...")
     players = client.get_all_players()
     if settings.ingest_active_only:
         players = [p for p in players if p.get("is_active")]
@@ -39,7 +43,7 @@ def run(season: str | None = None, max_players: int | None = None) -> None:
 
     with SessionLocal() as db:
         quality_run = DataQualityRun(
-            started_at=datetime.utcnow(),
+            started_at=_utc_now(),
             status="running",
             checks_passed=0,
             checks_failed=0,
@@ -58,7 +62,7 @@ def run(season: str | None = None, max_players: int | None = None) -> None:
             player_id = player.get("id")
             if not player_id:
                 continue
-            print(f"[{datetime.utcnow().isoformat()}] Fetching logs for player {player_id} ({index}/{len(players)})...")
+            print(f"[{_utc_now().isoformat()}] Fetching logs for player {player_id} ({index}/{len(players)})...")
             logs = client.get_player_game_log(player_id=player_id, season=season)
             games_written, stats_written = upsert_player_game_logs(
                 db=db,
@@ -85,7 +89,7 @@ def run(season: str | None = None, max_players: int | None = None) -> None:
             checks_failed += 1
 
         quality_run.status = "success" if checks_failed == 0 else "warning"
-        quality_run.finished_at = datetime.utcnow()
+        quality_run.finished_at = _utc_now()
         quality_run.checks_passed = checks_passed
         quality_run.checks_failed = checks_failed
         quality_run.details_json = json.dumps(
@@ -102,7 +106,7 @@ def run(season: str | None = None, max_players: int | None = None) -> None:
         db.commit()
 
     print(
-        f"[{datetime.utcnow().isoformat()}] Refresh done "
+        f"[{_utc_now().isoformat()}] Refresh done "
         f"(teams={team_count}, players={player_count}, games={total_games}, player_game_stats={total_stats})"
     )
 

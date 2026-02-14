@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -10,6 +10,10 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from src.db.models import Game, Player, PlayerGameStats, Team
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC)
 
 
 def _to_int(value: Any) -> int | None:
@@ -108,7 +112,7 @@ def upsert_teams(db: Session, teams: list[dict[str, Any]]) -> int:
             "abbreviation": stmt.excluded.abbreviation,
             "conference": stmt.excluded.conference,
             "division": stmt.excluded.division,
-            "updated_at": datetime.utcnow(),
+            "updated_at": _utc_now(),
         },
     )
     db.execute(stmt)
@@ -143,7 +147,7 @@ def upsert_players(db: Session, players: list[dict[str, Any]]) -> int:
             "first_name": stmt.excluded.first_name,
             "last_name": stmt.excluded.last_name,
             "is_active": stmt.excluded.is_active,
-            "updated_at": datetime.utcnow(),
+            "updated_at": _utc_now(),
         },
     )
     db.execute(stmt)
@@ -161,7 +165,7 @@ def upsert_player_game_logs(
 
     games_rows = []
     stat_rows = []
-    now = datetime.utcnow()
+    now = _utc_now()
 
     for log in logs:
         game_id = _to_int(log.get("Game_ID") or log.get("GAME_ID"))

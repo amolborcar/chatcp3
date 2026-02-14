@@ -39,7 +39,7 @@ def _validate_metrics(metrics: list[str]) -> None:
     invalid_metrics = [metric for metric in metrics if metric not in ALLOWED_METRICS]
     if invalid_metrics:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Unsupported metrics: {', '.join(sorted(set(invalid_metrics)))}",
         )
 
@@ -48,12 +48,12 @@ def _validate_aggregations(aggregations: list[AggregationSpec]) -> None:
     for aggregation in aggregations:
         if aggregation.metric not in ALLOWED_METRICS:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Unsupported aggregation metric: {aggregation.metric}",
             )
         if aggregation.op not in ALLOWED_OPS:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Unsupported aggregation op: {aggregation.op}",
             )
 
@@ -62,7 +62,7 @@ def _validate_dimensions(dimensions: list[str]) -> None:
     invalid_dimensions = [dimension for dimension in dimensions if dimension not in GROUPABLE_DIMENSIONS]
     if invalid_dimensions:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Unsupported dimensions: {', '.join(sorted(set(invalid_dimensions)))}",
         )
 
@@ -71,7 +71,7 @@ def _validate_sort_fields(sort_specs, allowed_fields: set[str]) -> None:
     invalid_sort_fields = [sort_spec.field for sort_spec in sort_specs if sort_spec.field not in allowed_fields]
     if invalid_sort_fields:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Unsupported sort fields: {', '.join(sorted(set(invalid_sort_fields)))}",
         )
 
